@@ -79,13 +79,13 @@ assign LCD_DEN = (x_cnt < active_x) && (y_cnt < active_y);
 wire [3:0] mario_x;
 wire [3:0] mario_y;
 
-assign mario_x = y_cnt[3:0];
+//to make the sprites appear on the horizontal axis of the LCD, i need to call the y_axis on mario_x
+assign mario_x = y_cnt[3:0];  
 assign mario_y = x_cnt[3:0];
 
-//we will be calculating the address based off what was hinted to us by the instructions
 assign pixel_address = (mario_y << 4) + mario_x;
 
-//unlike lab 5, our rgb format will be different.
+//unlike lab 5, our rgb format will be different since we are doing only 16 bits.
 //  REMEMBER: upper 5 bits -> red, middle 6 -> green, lower 5 -> blue
 always @(*) begin
     if(LCD_DEN) begin
@@ -104,20 +104,18 @@ reg [15:0] shift_reg = 0;
 reg [3:0] cnt = 0;
 
 //called posedge spi_sck and spi_cs to fix cut-off and color issue
-/the fix works. 
+//the fix works. 
 always @(posedge SPI_SCK or posedge SPI_CS) begin
-    //we <= 0;
-
     //since the CS is low in the pico when transferring the bits, we should only recieve when its low as well
     if(SPI_CS == 0) begin   
         //the incoming bits need to be shifted and we need to count them
-        //similar to what i did in lab 4
+        //similar to what i did in lab 4/5
         shift_reg <= {shift_reg[14:0], SPI_MOSI};
 
         //now, here is the code for once we recieve the bits
         if(cnt == 15) begin
             wdata <= {shift_reg[14:0], SPI_MOSI};
-            we <= 1;
+            we <= 1;    //according to the instructions. 
             cnt <= 0;
             waddr <= waddr + 1;
         end else begin
